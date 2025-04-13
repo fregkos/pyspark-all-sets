@@ -20,5 +20,8 @@ python src/generate_dataset.py <number>
 ### Run the Spark job through Docker
 
 ```bash
-docker run --rm -it -v "$(pwd)":/opt/spark/work-dir/app apache/spark-py /opt/spark/bin/spark-submit app/src/main.py
+docker run --rm -v "$(pwd)":/opt/spark/work-dir/app apache/spark-py /opt/spark/bin/spark-submit app/src/main.py
 ```
+
+- --rm: Removes the container after it stops
+- -v `"$(pwd)":/opt/spark/work-dir/app`: Mounts your current directory to `/opt/spark/work-dir/app` in the container (`/opt/spark/work-dir/` is the default path for Spark data files)
