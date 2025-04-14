@@ -1,0 +1,29 @@
+services:
+  spark-master:
+    image: bitnami/spark:3.5 # docker.io/bitnami/spark:3
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "8080:8080"  # Web UI
+      - "7077:7077"  # Cluster connection
+    volumes:
+      - ./spark:/opt/spark-app
+    networks:
+      - spark-net
+
+  spark-worker:
+    image: bitnami/spark:3.5 # docker.io/bitnami/spark:3
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2g
+    depends_on:
+      - spark-master
+    deploy:
+      replicas: 4
+    networks:
+      - spark-net
+
+networks:
+  spark-net:
