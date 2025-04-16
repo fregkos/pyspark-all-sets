@@ -13,5 +13,5 @@ scrape_configs:
       - targets:
         - cadvisor:8080
 
-networks: 
-  - spark-net
+# networks: 
+#   - spark-net
