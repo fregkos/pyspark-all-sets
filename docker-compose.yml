@@ -17,7 +17,7 @@ services:
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=2g
+      - SPARK_WORKER_MEMORY=1g
     depends_on:
       - spark-master
     deploy:
@@ -26,6 +26,7 @@ services:
       - spark-net
   cadvisor:
     image: gcr.io/cadvisor/cadvisor
+    # privileged: true
     restart: always
     container_name: cadvisor
     volumes:
@@ -36,7 +37,10 @@ services:
     ports:  
       - 8081:8080
     command:
-      - "--disable_metrics=disk"
+      # - "--disable_metrics=disk"
+      # - "--disable_metrics=referenced_memory"
+      - --disable_metrics=disk,referenced_memory
+    # user: "${UID}:${GID}"
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -45,6 +49,6 @@ services:
     ports:
       - "9090:9090"
     networks:
-    - spark-net
+      - spark-net
 networks:
   spark-net:
