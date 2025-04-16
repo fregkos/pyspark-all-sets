@@ -34,7 +34,7 @@ You'll need the following directory structure.
 project-root/
 ├── docker-compose.yml
 └── spark/
-    ├── spark-script.py
+    └── spark-script.py
 ```
 
 You can configure the amount of workers (replicas) this process will spawn. Also make sure to configure their memory capacity according to your system's resources. 
