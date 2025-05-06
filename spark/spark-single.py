@@ -1,5 +1,8 @@
+import os
+import shutil
 from pyspark import SparkContext
 import logging
+import sys
 
 logging.basicConfig(level=logging.INFO)
 sc = SparkContext(appName="ShuffleTrafficTest")
@@ -19,9 +22,26 @@ def emit_pairs(data: iter):
     return result
 
 
-pairs_rdd = rdd.mapPartitions(emit_pairs).groupByKey().mapValues(list)
+def emit_dummy_payload(data: iter):
+    for i in data:
+        for j in range(1, n + 1):
+            if i != j:
+                key = tuple(sorted((i, j)))
+                # result.append((key, "dummy payload of size 100 MB".encode('utf-8') * 125000))``
+                # yield (key, "dummy payload of size 100 MB".encode('utf-8') * 1250)
+                yield (key, "a" * 1024 ** 2)
 
-print(pairs_rdd.take(20))
+pairs_rdd = rdd.mapPartitions(emit_dummy_payload).groupByKey().mapValues(list)
+
+# print(pairs_rdd.take(5))
+
+
+# remove the whole directory first
+if os.path.exists("pairs_output"):
+    shutil.rmtree("pairs_output")
+
+pairs_rdd.saveAsTextFile("pairs_output")
+
 
 # Test case 1: [key, (value)]
 """mapped1 = rdd.map(lambda x: (x % 100, x))
