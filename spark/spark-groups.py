@@ -7,7 +7,8 @@ import sys
 logging.basicConfig(level=logging.INFO)
 sc = SparkContext(appName="GroupedShuffleTrafficTest")
 
-n = 1000
+
+n = 3000
 group_size = 100
 
 # Step 1: Predefine groups
@@ -30,45 +31,22 @@ group_pair_rdd = sc.parallelize(group_pairs, len(groups))
 # Step 4: Define logic to emit all (i, j) → [i, j] from two groups
 def emit_pairwise_records(group_pair):
     (id1, g1), (id2, g2) = group_pair
-    output = []
+    # output = []
     for i in g1:
         for j in g2:
-            output.append(((i, j), [i, j]))
-    return output
+            # output.append(((i, j), [i, j]))
+            yield ((i, j), "a" * 1024 ** 2)
 
-def emit_dummy_payload(pairwise_record):
-    (id1, g1), (id2, g2), record = pairwise_record
-
-    # Calculate the size of the current payload in bytes
-    current_size = sys.getsizeof(record)
-    
-    # Target payload size in bytes (1 MB)
-    target_size = 1024 * 1024 * 300
-    
-    # Calculate how much more space we need to fill
-    additional_space_needed = target_size - current_size
-    
-    # Append dummy data until the desired size is reached
-    while additional_space_needed > 0:
-        record.append(0)  # Use a dummy value, e.g., 0
-        current_size = sys.getsizeof(record)
-        additional_space_needed -= (sys.getsizeof(record) - current_size)
-    
-    # (id1, g1), (id2, g2) = pairwise_record
-    output = []
-    for i in g1:
-        for j in g2:
-            output.append(((i, j), [i, j], record))
-
-    return output
+            # yield ((i, j), [i, j])
 
 
 # Step 5: Apply the mapping logic
-# result_rdd = group_pair_rdd.flatMap(emit_pairwise_records)
-result_rdd = group_pair_rdd.flatMap(emit_dummy_payload)
-
+result_rdd = group_pair_rdd.flatMap(emit_pairwise_records).groupByKey().mapValues(list)
+# print(result_rdd.collect(), width=120)
+# pprint(len(result_rdd.collect()), width=120)
 
 # (Optional) Inspect or save result
-# print(result_rdd.take(10))
+print(result_rdd.take(10))
+# result_rdd.collect()
 
 sc.stop()
