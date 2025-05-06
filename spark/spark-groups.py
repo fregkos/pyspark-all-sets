@@ -2,6 +2,7 @@ from pyspark import SparkContext
 import logging
 from itertools import combinations_with_replacement
 from pprint import pprint
+import sys
 
 logging.basicConfig(level=logging.INFO)
 sc = SparkContext(appName="GroupedShuffleTrafficTest")
@@ -11,7 +12,7 @@ group_size = 100
 
 # Step 1: Predefine groups
 groups = [list(range(i, i + group_size)) for i in range(1, n + 1, group_size)]
-print(f"{groups=}")
+# print(f"{groups=}")
 # pprint(groups)
 
 # Step 2: Create group pairs (with self-pairs included)
@@ -35,9 +36,36 @@ def emit_pairwise_records(group_pair):
             output.append(((i, j), [i, j]))
     return output
 
+def emit_dummy_payload(pairwise_record):
+    (id1, g1), (id2, g2), record = pairwise_record
+
+    # Calculate the size of the current payload in bytes
+    current_size = sys.getsizeof(record)
+    
+    # Target payload size in bytes (1 MB)
+    target_size = 1024 * 1024 * 300
+    
+    # Calculate how much more space we need to fill
+    additional_space_needed = target_size - current_size
+    
+    # Append dummy data until the desired size is reached
+    while additional_space_needed > 0:
+        record.append(0)  # Use a dummy value, e.g., 0
+        current_size = sys.getsizeof(record)
+        additional_space_needed -= (sys.getsizeof(record) - current_size)
+    
+    # (id1, g1), (id2, g2) = pairwise_record
+    output = []
+    for i in g1:
+        for j in g2:
+            output.append(((i, j), [i, j], record))
+
+    return output
+
 
 # Step 5: Apply the mapping logic
-result_rdd = group_pair_rdd.flatMap(emit_pairwise_records)
+# result_rdd = group_pair_rdd.flatMap(emit_pairwise_records)
+result_rdd = group_pair_rdd.flatMap(emit_dummy_payload)
 
 
 # (Optional) Inspect or save result
