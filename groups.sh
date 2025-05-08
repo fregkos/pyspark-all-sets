@@ -1,1 +1,1 @@
-docker exec -it spark-master spark-submit   --master spark://spark-master:7077   /opt/spark-app/spark-groups.py
+docker exec -it sparkstack_spark-master.1.v2ucxzzebp0pogvl9wbe3wb0u spark-submit   --master spark://spark-master:7077   /opt/spark-app/spark-groups.py

@@ -1,1 +1,1 @@
-docker exec -it spark-master spark-submit   --master spark://spark-master:7077   /opt/spark-app/spark-single.py
+docker exec -it sparkstack_spark-master.1.2g0m8to4b9t09ie4syw6t0hbc spark-submit   --master spark://spark-master:7077   /opt/spark-app/spark-single.py
