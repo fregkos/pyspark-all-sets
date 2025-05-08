@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+
+# files
+spark/spark-script-old.py
+spark/spark-default.conf
+
 # Distribution / packaging
 .Python
 build/
