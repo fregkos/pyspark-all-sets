@@ -7,6 +7,7 @@ services:
     ports:
       - '8080:8080' # Web UI
       - '7077:7077' # Cluster connection
+      - '4040:4040' # Application Web UI (for driver when run inside master)
     volumes:
       - ./spark:/opt/spark-app
     networks:
