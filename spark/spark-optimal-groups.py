@@ -2,9 +2,6 @@ from pyspark import SparkContext
 import logging
 from itertools import combinations_with_replacement
 from pprint import pprint
-import sys
-import time
-import requests
 
 logging.basicConfig(level=logging.INFO)
 sc = SparkContext(appName="GroupedShuffleTrafficTest")
@@ -44,7 +41,7 @@ for group_counter in range(d // q):  # for each supergroup
 # Step 2: Create group pairs (with self-pairs included)
 group_pairs = list(combinations_with_replacement(enumerate(groups, 1), 2))
 # ------- this step creates combinations of the SUPER groups
-# ------- meaning, the [[],[],[],[]], not the invidual inner groups [], [],
+# ------- meaning, the [[],[],[],[]], not the individual inner groups [], [],
 # ------- neither the quanta
 
 
