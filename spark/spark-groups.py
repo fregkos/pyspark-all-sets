@@ -1,13 +1,14 @@
 from pyspark import SparkContext
 import logging
 from itertools import combinations_with_replacement
+import time
 
 logging.basicConfig(level=logging.INFO)
 sc = SparkContext(appName="GroupedShuffleTrafficTest")
 
 q = 1000  # Predefined max reducer capacity for elements
 d = 5000  # our total multitude of data
-group_size = int(q * 0.1)
+group_size = int(q * 0.5)
 payload = 1  # Configurable payload
 
 # Step 1: Predefine groups
@@ -18,6 +19,7 @@ groups = [list(range(i, i + group_size)) for i in range(1, d + 1, group_size)]
 group_pairs = list(combinations_with_replacement(enumerate(groups, 1), 2))
 
 
+start_time = time.perf_counter()
 # Step 3: Parallelize group pairs (one per partition)
 group_pair_rdd = sc.parallelize(group_pairs, len(groups))
 
@@ -42,4 +44,5 @@ result_rdd = group_pair_rdd.flatMap(emit_pairwise_records)
 
 result_rdd.foreach(lambda x: x)
 print("DATA_EXCHANGED", data_exchanged.value)
+print(f"time taken: {time.perf_counter() - start_time}")
 sc.stop()

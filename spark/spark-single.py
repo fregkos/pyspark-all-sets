@@ -1,10 +1,15 @@
 from pyspark import SparkContext
 import logging
+import time
+
 
 logging.basicConfig(level=logging.INFO)
 sc = SparkContext(appName="ShuffleTrafficTest")
 
 d = 5000  # our total multitude of data
+
+
+start_time = time.perf_counter()
 rdd = sc.parallelize(range(1, d + 1), d)
 payload = 1  # Configurable payload
 
@@ -24,6 +29,7 @@ result_rdd = rdd.mapPartitions(emit_pairwise_records)
 
 result_rdd.foreach(lambda x: x)
 print("DATA_EXCHANGED", data_exchanged.value)
+print(f"time taken: {time.perf_counter() - start_time}")
 sc.stop()
 # single: 9000000 iterations
 # groups:   93000 iterations

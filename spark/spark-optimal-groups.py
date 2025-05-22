@@ -2,7 +2,7 @@ from pyspark import SparkContext
 import logging
 from itertools import combinations_with_replacement
 from pyspark.accumulators import AccumulatorParam
-
+import time
 logging.basicConfig(level=logging.INFO)
 sc = SparkContext(appName="GroupedShuffleTrafficTest")
 
@@ -46,7 +46,7 @@ group_pairs = list(combinations_with_replacement(enumerate(groups, 1), 2))
 # ------- meaning, the [[],[],[],[]], not the individual inner groups [], [],
 # ------- neither the quanta
 
-
+start_time = time.perf_counter()
 # Step 3: Parallelize group pairs (one per partition)
 group_pair_rdd = sc.parallelize(group_pairs, len(groups))
 
@@ -86,5 +86,6 @@ result_rdd = group_pair_rdd.flatMap(emit_pairwise_records)
 result_rdd.foreach(lambda x: x)
 
 print("DATA_EXCHANGED", data_exchanged.value)
+print(f"time taken: {time.perf_counter() - start_time}")
 # pprint(records.value)
 sc.stop()
