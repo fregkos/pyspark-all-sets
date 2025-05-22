@@ -1,31 +1,29 @@
-import os
-import shutil
 from pyspark import SparkContext
 import logging
-import sys
 
+logging.basicConfig(level=logging.INFO)
 sc = SparkContext(appName="ShuffleTrafficTest")
 
-n = 3000
-rdd = sc.parallelize(range(1, n + 1), n)
+d = 5000  # our total multitude of data
+rdd = sc.parallelize(range(1, d + 1), d)
+payload = 1  # Configurable payload
 
 data_exchanged = sc.accumulator(0)
 
-def emit_dummy_payload(data: iter):
+
+def emit_pairwise_records(data):
     for i in data:
-        for j in range(1, n + 1):
+        for j in range(1, d + 1):
             data_exchanged.add(1)
-            if i != j:
-                key = tuple(sorted((i, j)))
-                yield (key, 1)
+            # if i != j:
+            # key = tuple(sorted((i, j)))
+            yield ((i, j), payload)
 
 
-pairs_rdd = rdd.mapPartitions(emit_dummy_payload).groupByKey().mapValues(list)
+result_rdd = rdd.mapPartitions(emit_pairwise_records)
 
-pairs_rdd.take(10) # has no effect on result, 10 or 1000
+result_rdd.foreach(lambda x: x)
 print("DATA_EXCHANGED", data_exchanged.value)
-
-
 sc.stop()
 # single: 9000000 iterations
 # groups:   93000 iterations

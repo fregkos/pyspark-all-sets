@@ -1,14 +1,15 @@
 from pyspark import SparkContext
 import logging
 from itertools import combinations_with_replacement
-from pprint import pprint
 from pyspark.accumulators import AccumulatorParam
 
 logging.basicConfig(level=logging.INFO)
 sc = SparkContext(appName="GroupedShuffleTrafficTest")
 
-d = 5000 # our total multitude of data
-q = 1000 # our max reducer capacity for elements
+q = 1000  # Predefined max reducer capacity for elements
+d = 5000  # our total multitude of data
+group_size = int(q * 0.1)
+
 
 # we have established the value of `p` to be
 p = d // q  # p is 5 in this case, a prime number
@@ -61,14 +62,14 @@ class SetAccumulator(AccumulatorParam):
 
 # Step 4: Define logic to emit all (i, j) → [i, j] from two groups
 data_exchanged = sc.accumulator(0)
-sc.setLogLevel("INFO")
 records = sc.accumulator(set(), SetAccumulator())
+
 
 def emit_pairwise_records(group_pair):
     (id1, supergroup1), (id2, supergroup2) = group_pair
     # records = []
 
-    data_exchanged.add(len(supergroup1)*len(supergroup1[0]) * 2)
+    data_exchanged.add(len(supergroup1) * len(supergroup1[0]) * 2)
     # For each subgroup in first supergroup
     for subgroup1 in supergroup1:
         # For each subgroup in second supergroup
@@ -76,16 +77,14 @@ def emit_pairwise_records(group_pair):
             # Compare elements across subgroups
             for i in subgroup1:
                 for j in subgroup2:
-                    records.add([(i,j)])
-            #         if i != j:
-            #             # records.append(((i, j), i))
-            #             data_exchanged.add(1)
+                    records.add([(i, j)])
                     yield ((i, j), 1)
 
 
 # Step 5: Apply the mapping logic
-result_rdd = group_pair_rdd.flatMap(emit_pairwise_records)# .groupByKey().mapValues(list)
+result_rdd = group_pair_rdd.flatMap(emit_pairwise_records)
 result_rdd.foreach(lambda x: x)
+
 print("DATA_EXCHANGED", data_exchanged.value)
 # pprint(records.value)
 sc.stop()
