@@ -32,10 +32,7 @@ data = np.arange(0, d).reshape(p, p, items_per_group)  # shape: (5,5,200)
 start_time = time.perf_counter()
 # Create the RDD in the following manner ((i,j), array_200)
 # where each element of the array_200 has a {k,v}: {index, 1}
-rdd = sc.parallelize(
-    [((i, j), [(int(x), 1) for x in data[i][j]]) for i in range(p) for j in range(p)],
-    d // items_per_group,
-)
+rdd = sc.parallelize([((i, j), [(int(x), 1) for x in data[i][j]]) for i in range(p) for j in range(p)])
 
 data_exchanged = sc.accumulator(0)
 
@@ -43,20 +40,22 @@ data_exchanged = sc.accumulator(0)
 def assign_to_reducers(record):
     (i, j), element_pairs = record
     outputs = []
-
+    # element_pairs: [(1, payload), (2, payload), (3, payload) ...]
     # Count the data exchange: p+1 teams of len(pair of elements) each
     data_exchanged.add((p + 1) * len(element_pairs))
 
     for k in range(p):  # team first p teams k-indexed, where 0 <= k < p
         reducer_id = (k, (i + k * j) % p)
-        for kv in element_pairs:
-            outputs.append((reducer_id, kv))
+        outputs.append((reducer_id, element_pairs))
+        # for kv in element_pairs:
+        #     outputs.append((reducer_id, kv))
             # data_exchanged.add(1) # normally, this would be put here
 
     # deal with team p now!
     reducer_id = (p, j)
-    for kv in element_pairs:
-        outputs.append((reducer_id, kv))
+    outputs.append((reducer_id, element_pairs))
+    # for kv in element_pairs:
+    #     outputs.append((reducer_id, kv))
         # data_exchanged.add(1) # and here
     return outputs
 
@@ -72,15 +71,16 @@ def f(splitIndex, iterator):
 
 grouped_by_reducer = rdd_mapped.groupByKey()
 
-print(grouped_by_reducer.mapPartitionsWithIndex(f).max() + 1)
 
 # collect  data
 result = grouped_by_reducer.collect()
 
 print("DATA_EXCHANGED", data_exchanged.value)
 print(f"time taken: {time.perf_counter() - start_time}")
+# print(grouped_by_reducer.mapPartitionsWithIndex(f).max() + 1)
 
 for reducer_id, values in result:
-    print(f"Reducer {reducer_id} received {len(values)} items")
+    # print(f"Reducer {reducer_id} received {len(values)} items")
+    pass
 
 sc.stop()

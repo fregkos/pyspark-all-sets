@@ -10,7 +10,7 @@ d = 5000  # our total multitude of data
 
 
 start_time = time.perf_counter()
-rdd = sc.parallelize(range(1, d + 1), d)
+rdd = sc.parallelize(range(1, d + 1))
 payload = 1  # Configurable payload
 
 data_exchanged = sc.accumulator(0)
@@ -31,5 +31,3 @@ grouped_by_reducer.foreach(lambda x: x)
 print("DATA_EXCHANGED", data_exchanged.value)
 print(f"time taken: {time.perf_counter() - start_time}")
 sc.stop()
-# single: 9000000 iterations
-# groups:   93000 iterations
