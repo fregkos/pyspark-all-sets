@@ -62,7 +62,7 @@ rdd_mapped = rdd.flatMap(assign_to_reducers)
 grouped_by_reducer = rdd_mapped.groupByKey()
 
 
-# Collect the data
+# collect  data
 result = grouped_by_reducer.collect()
 
 print("DATA_EXCHANGED", data_exchanged.value)
